@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .queue {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+        }
+
+        .process {
+            width: 50px;
+            height: 20px;
+            background-color: #3498db;
+            position: absolute;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+    </style>
+    <title>Multi-Level Feedback Queue Scheduling</title>
+</head>
+<body>
+
+<div class="queue" id="queues"></div>
+
+<script>
+    const queuesElement = document.getElementById('queues');
+    const timeSlices = [1, 2, 4, 8];
+
+    class Process {
+        constructor(name, jobSize) {
+            this.name = name;
+            this.jobSize = jobSize;
+            this.element = document.createElement('div');
+            this.element.className = 'process';
+            this.element.innerText = name;
+            this.element.style.width = '50px';
+            this.element.style.height = '20px';
+            this.element.style.backgroundColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+            this.element.style.position = 'absolute';
+            this.element.style.textAlign = 'center';
+            this.element.style.lineHeight = '20px';
+            this.element.style.color = 'white';
+        }
+
+        move(x, y) {
+            this.element.style.left = `${x}px`;
+            this.element.style.top = `${y}px`;
+        }
+    }
+
+    const queues = [[], [], [], []];
+
+    // 创建十个进程，每个进程具有随机的作业量
+    const processes = Array.from({ length: 10 }, (_, i) => new Process(`Process-${i + 1}`, Math.floor(Math.random() * 50) + 1));
+
+    // 将进程放入第一个队列
+    processes.forEach(process => queues[0].push(process));
+
+    // 初始化界面
+    for (let i = 0; i < 4; i++) {
+        const queueElement = document.createElement('div');
+        queueElement.className = 'queue';
+        queueElement.id = `queue-${i + 1}`;
+        queuesElement.appendChild(queueElement);
+    }
+
+    // 模拟调度器
+    setInterval(() => {
+        for (let i = 0; i < 4; i++) {
+            if (queues[i].length > 0) {
+                const process = queues[i].shift();
+                const x = i * 200;
+                const y = 400 - process.jobSize * 4;
+                process.move(x, y);
+                document.getElementById(`queue-${i + 1}`).appendChild(process.element);
+
+                // 模拟执行时间
+                setTimeout(() => {
+                    process.jobSize -= timeSlices[i];
+                    if (process.jobSize > 0) {
+                        if (i === 3) {
+                            queues[3].push(process);
+                        } else {
+                            queues[i + 1].push(process);
+                        }
+                    } else {
+                        process.element.style.display = 'none';  // 进程执行完毕，隐藏
+                    }
+                }, timeSlices[i] * 200);
+            }
+        }
+    }, 1000);  // 每秒执行一次
+</script>
+
+</body>
+</html>
